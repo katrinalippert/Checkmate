@@ -12,11 +12,14 @@ const getBaseDefaults = (data?: Monitor | null) => ({
 	description: data?.description || "",
 	interval: data?.interval || 60000,
 	notifications: data?.notifications || [],
+	escalationNotifications: data?.escalationNotifications || [],
+	escalationEmailFrequency: data?.escalationEmailFrequency ?? undefined,
 	statusWindowSize: data?.statusWindowSize || 5,
 	statusWindowThreshold: data?.statusWindowThreshold || 60,
 	geoCheckEnabled: data?.geoCheckEnabled ?? false,
 	geoCheckLocations: data?.geoCheckLocations || [],
 	geoCheckInterval: data?.geoCheckInterval || 300000,
+	escalationNotificationChannel: data?.escalationNotificationChannel || "",
 });
 
 export const useMonitorForm = ({

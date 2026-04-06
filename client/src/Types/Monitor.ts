@@ -59,6 +59,9 @@ export interface Monitor {
 	isActive: boolean;
 	interval: number;
 	uptimePercentage?: number;
+	escalationEmailFrequency?: number;
+	escalationNotifications?: string[];
+	escalationNotificationChannel?: string;
 	notifications: string[];
 	secret?: string;
 	cpuAlertThreshold: number;

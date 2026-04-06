@@ -543,6 +543,30 @@
 					"description": "Select the notification channels you want to use",
 					"title": "Notifications"
 				},
+				"escalationRules": {
+                    "title": "Escalation Rules",
+                    "description": "If the monitor stays down for the specified time, notify additional channels.",
+                    "option": {
+                        "frequency": {
+                            "label": "Escalate After (minutes)",
+                            "placeholder": "Enter minutes"
+                        },
+                        "channels": {
+                            "label": "Escalation notification channels",
+                            "placeholder": "Select channels"
+                        }
+                    }
+                },
+                "escalationEmailFrequency": {
+					"title": "Escalation email frequency",
+					"description": "Send escalation notifications at this interval when the monitor remains in an alert state",
+					"option": {
+						"frequency": {
+							"label": "Escalation frequency (minutes)",
+							"placeholder": "Enter minutes"
+						}
+					}
+				},
 				"type": {
 					"description": "Select the type of check to perform",
 					"optionDockerDescription": "Use Docker to monitor if a container is running.",

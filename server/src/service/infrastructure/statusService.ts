@@ -236,9 +236,10 @@ export class StatusService implements IStatusService {
 			let newStatus: MonitorStatus = status === true ? "up" : "down";
 			let statusChanged = false;
 
-			// Return early if not enough data points
+			// Return early if not enough data points. Keep the previous status on isolated failures
+			// so a single timeout doesn't immediately flip an otherwise healthy monitor down.
 			if (monitor.statusWindow.length < monitor.statusWindowSize) {
-				monitor.status = newStatus;
+				monitor.status = status === true ? "up" : prevStatus;
 				const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
 				return {
 					monitor: updated,
@@ -253,8 +254,14 @@ export class StatusService implements IStatusService {
 			const failures = monitor.statusWindow.filter((s) => s === false).length;
 			const failureRate = (failures / monitor.statusWindow.length) * 100;
 
+			// Recover immediately on a successful probe so monitors don't stay falsely down.
+			if (status === true && monitor.status === "down") {
+				newStatus = "up";
+				statusChanged = true;
+				monitor.statusWindow = [true];
+			}
 			// If threshold has been met and the monitor is not already down, mark down:
-			if (failureRate >= monitor.statusWindowThreshold && monitor.status !== "down") {
+			else if (failureRate >= monitor.statusWindowThreshold && monitor.status !== "down") {
 				newStatus = "down";
 				statusChanged = true;
 			}
@@ -345,10 +352,14 @@ export class StatusService implements IStatusService {
 				}
 			}
 
-			// Apply the final status
-			monitor.status = newStatus;
+				if (statusChanged && (newStatus === "down" || newStatus === "breached" || newStatus === "up")) {
+					monitor.lastEscalationEmailSentAt = undefined;
+				}
 
-			const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
+				// Apply the final status
+				monitor.status = newStatus;
+
+				const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
 
 			return {
 				monitor: updated,

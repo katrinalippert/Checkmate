@@ -11,6 +11,10 @@ import CacheableLookup from "cacheable-lookup";
 export class HttpProvider implements IStatusProvider<HttpStatusPayload> {
 	readonly type = "http";
 
+	supports(type: MonitorType) {
+		return type === "http";
+	}
+
 	constructor(
 		private got: Got,
 		private advancedMatcher: IAdvancedMatcher
@@ -18,15 +22,23 @@ export class HttpProvider implements IStatusProvider<HttpStatusPayload> {
 		const cacheable = new CacheableLookup({ maxTtl: 300, errorTtl: 30 });
 		this.got = got.extend({
 			dnsCache: cacheable,
+			followRedirect: true,
+			throwHttpErrors: false,
+			retry: { limit: 0 },
 			timeout: {
-				request: 30000,
+				lookup: 5000,
+				connect: 5000,
+				secureConnect: 10000,
+				send: 10000,
+				response: 15000,
+				request: 15000,
 			},
-			retry: { limit: 1 },
+			headers: {
+				"user-agent": "Checkmate Monitor",
+				accept: "*/*",
+				"cache-control": "no-cache",
+			},
 		});
-	}
-
-	supports(type: MonitorType) {
-		return type === "http";
 	}
 
 	private handleHttpError<T>(error: unknown, monitor: Monitor): MonitorStatusResponse<T> {
@@ -102,11 +114,12 @@ export class HttpProvider implements IStatusProvider<HttpStatusPayload> {
 			}
 
 			const matchResult = this.advancedMatcher.validate<T>(payload, monitor);
+			const httpSuccess = response.statusCode >= 200 && response.statusCode < 400;
 			return {
 				monitorId: monitor.id,
 				teamId: monitor.teamId,
 				type: monitor.type,
-				status: response.ok && matchResult.ok,
+				status: httpSuccess && matchResult.ok,
 				code: response.statusCode,
 				message: matchResult.ok ? (response.statusMessage ?? "OK") : matchResult.message,
 				responseTime: response.timings.phases.total ?? 0,

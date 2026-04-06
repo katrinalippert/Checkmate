@@ -48,6 +48,7 @@ export class NotificationMessageBuilder implements INotificationMessageBuilder {
 			metadata: {
 				teamId: monitor.teamId,
 				notificationReason: decision.notificationReason || "status_change",
+				isEscalation: decision.isEscalation || false,
 			},
 		};
 	}
@@ -58,7 +59,12 @@ export class NotificationMessageBuilder implements INotificationMessageBuilder {
 			return "monitor_down";
 		}
 
-		// Threshold breach (only if not down)
+		// Handle breached hardware monitors as threshold breach notifications
+		if (monitor.status === "breached") {
+			return "threshold_breach";
+		}
+
+		// Threshold breach (only if not down or breached)
 		if (decision.notificationReason === "threshold_breach") {
 			return "threshold_breach";
 		}
