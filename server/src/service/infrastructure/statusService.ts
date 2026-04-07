@@ -233,19 +233,17 @@ export class StatusService implements IStatusService {
 			}
 
 			const prevStatus = monitor.status;
-			let newStatus: MonitorStatus = status === true ? "up" : "down";
+			let newStatus: MonitorStatus = prevStatus;
 			let statusChanged = false;
 
-			// Return early if not enough data points. Keep the previous status on isolated failures
-			// so a single timeout doesn't immediately flip an otherwise healthy monitor down.
+			// Keep the current status until there are enough checks to evaluate the
+			// user-configured sliding window threshold.
 			if (monitor.statusWindow.length < monitor.statusWindowSize) {
-				const provisionalStatus = status === true ? "up" : prevStatus;
-				monitor.status = provisionalStatus;
-				const provisionalStatusChanged = provisionalStatus !== prevStatus;
+				monitor.status = prevStatus;
 				const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
 				return {
 					monitor: updated,
-					statusChanged: provisionalStatusChanged,
+					statusChanged: false,
 					prevStatus,
 					code,
 					timestamp: Date.now(),
@@ -256,18 +254,12 @@ export class StatusService implements IStatusService {
 			const failures = monitor.statusWindow.filter((s) => s === false).length;
 			const failureRate = (failures / monitor.statusWindow.length) * 100;
 
-			// Recover immediately on a successful probe so monitors don't stay falsely down.
-			if (status === true && monitor.status === "down") {
-				newStatus = "up";
-				statusChanged = true;
-				monitor.statusWindow = [true];
-			}
-			// If threshold has been met and the monitor is not already down, mark down:
-			else if (failureRate >= monitor.statusWindowThreshold && monitor.status !== "down") {
+			// Only change state when the configured failure threshold is crossed.
+			if (failureRate >= monitor.statusWindowThreshold && monitor.status !== "down") {
 				newStatus = "down";
 				statusChanged = true;
 			}
-			// If the failure rate is below the threshold and the monitor is down, recover:
+			// Recover only after the failure rate drops back below the configured threshold.
 			else if (failureRate < monitor.statusWindowThreshold && monitor.status === "down") {
 				newStatus = "up";
 				statusChanged = true;
@@ -354,14 +346,14 @@ export class StatusService implements IStatusService {
 				}
 			}
 
-			if (statusChanged && (newStatus === "down" || newStatus === "breached" || newStatus === "up")) {
-				monitor.lastEscalationEmailSentAt = undefined;
-			}
+				if (statusChanged && (newStatus === "down" || newStatus === "breached" || newStatus === "up")) {
+					monitor.lastEscalationEmailSentAt = undefined;
+				}
 
-			// Apply the final status
-			monitor.status = newStatus;
+				// Apply the final status
+				monitor.status = newStatus;
 
-			const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
+				const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
 
 			return {
 				monitor: updated,
