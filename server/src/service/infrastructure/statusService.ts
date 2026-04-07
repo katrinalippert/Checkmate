@@ -239,11 +239,13 @@ export class StatusService implements IStatusService {
 			// Return early if not enough data points. Keep the previous status on isolated failures
 			// so a single timeout doesn't immediately flip an otherwise healthy monitor down.
 			if (monitor.statusWindow.length < monitor.statusWindowSize) {
-				monitor.status = status === true ? "up" : prevStatus;
+				const provisionalStatus = status === true ? "up" : prevStatus;
+				monitor.status = provisionalStatus;
+				const provisionalStatusChanged = provisionalStatus !== prevStatus;
 				const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
 				return {
 					monitor: updated,
-					statusChanged: false,
+					statusChanged: provisionalStatusChanged,
 					prevStatus,
 					code,
 					timestamp: Date.now(),

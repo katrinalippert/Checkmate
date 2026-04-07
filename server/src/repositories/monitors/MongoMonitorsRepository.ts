@@ -362,6 +362,15 @@ class MongoMonitorsRepository implements IMonitorsRepository {
 
 		const notificationIds = (doc.notifications ?? []).map((notification) => toStringId(notification));
 		const escalationNotificationIds = (doc.escalationNotifications ?? []).map((notification) => toStringId(notification));
+		const escalationDelayMinutes = doc.escalation?.delayMinutes ?? doc.escalationEmailFrequency ?? undefined;
+		const escalationChannelId = doc.escalation?.channelId ?? doc.escalationNotificationChannel ?? escalationNotificationIds[0] ?? undefined;
+		const escalation =
+			escalationDelayMinutes && escalationChannelId
+				? {
+					delayMinutes: escalationDelayMinutes,
+					channelId: escalationChannelId,
+				}
+				: undefined;
 
 		return {
 			id: toStringId(doc._id),
@@ -385,6 +394,7 @@ class MongoMonitorsRepository implements IMonitorsRepository {
 			interval: doc.interval,
 			uptimePercentage: doc.uptimePercentage ?? undefined,
 			notifications: notificationIds,
+			escalation,
 			escalationNotifications: escalationNotificationIds,
 			escalationEmailFrequency: doc.escalationEmailFrequency ?? undefined,
 			escalationNotificationChannel: doc.escalationNotificationChannel ?? undefined,
@@ -425,6 +435,15 @@ class MongoMonitorsRepository implements IMonitorsRepository {
 
 		const notificationIds = (doc.notifications ?? []).map((notification: unknown) => toStringId(notification));
 		const escalationNotificationIds = (doc.escalationNotifications ?? []).map((notification: unknown) => toStringId(notification));
+		const escalationDelayMinutes = doc.escalation?.delayMinutes ?? doc.escalationEmailFrequency ?? undefined;
+		const escalationChannelId = doc.escalation?.channelId ?? doc.escalationNotificationChannel ?? escalationNotificationIds[0] ?? undefined;
+		const escalation =
+			escalationDelayMinutes && escalationChannelId
+				? {
+					delayMinutes: escalationDelayMinutes,
+					channelId: escalationChannelId,
+				}
+				: undefined;
 
 		return {
 			id: toStringId(doc._id),
@@ -448,6 +467,7 @@ class MongoMonitorsRepository implements IMonitorsRepository {
 			interval: doc.interval,
 			uptimePercentage: doc.uptimePercentage ?? undefined,
 			notifications: notificationIds,
+			escalation,
 			escalationNotifications: escalationNotificationIds,
 			escalationEmailFrequency: doc.escalationEmailFrequency ?? undefined,
 			escalationNotificationChannel: doc.escalationNotificationChannel ?? undefined,

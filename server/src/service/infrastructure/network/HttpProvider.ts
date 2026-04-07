@@ -21,23 +21,10 @@ export class HttpProvider implements IStatusProvider<HttpStatusPayload> {
 	) {
 		const cacheable = new CacheableLookup({ maxTtl: 300, errorTtl: 30 });
 		this.got = got.extend({
-			dnsCache: cacheable,
-			followRedirect: true,
-			throwHttpErrors: false,
-			retry: { limit: 0 },
-			timeout: {
-				lookup: 5000,
-				connect: 5000,
-				secureConnect: 10000,
-				send: 10000,
-				response: 15000,
-				request: 15000,
-			},
-			headers: {
-				"user-agent": "Checkmate Monitor",
-				accept: "*/*",
-				"cache-control": "no-cache",
-			},
+		    timeout: {
+		        request: 30000,
+		    },
+		    retry: { limit: 1 },
 		});
 	}
 

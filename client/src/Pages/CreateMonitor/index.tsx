@@ -252,11 +252,27 @@ const CreateMonitorPage = () => {
 	};
 
 	const onSubmit = async (data: MonitorFormData) => {
+		const escalation =
+			data.escalation?.delayMinutes && data.escalation?.channelId
+				? {
+					delayMinutes: data.escalation.delayMinutes,
+					channelId: data.escalation.channelId,
+				}
+				: undefined;
+
+		const payload = {
+			...data,
+			escalation,
+			escalationEmailFrequency: escalation?.delayMinutes,
+			escalationNotificationChannel: escalation?.channelId,
+			escalationNotifications: escalation?.channelId ? [escalation.channelId] : [],
+		};
+
 		let result;
 		if (isEditMode && monitorId) {
-			result = await patch(`/monitors/${monitorId}`, data);
+			result = await patch(`/monitors/${monitorId}`, payload);
 		} else {
-			result = await post("/monitors", data);
+			result = await post("/monitors", payload);
 		}
 
 		if (result?.success) {
@@ -749,7 +765,7 @@ const CreateMonitorPage = () => {
 																)
 															);
 														}}
-														aria-label="Remove notification"
+														aria-label={t("pages.createMonitor.form.notifications.option.removeAriaLabel")}
 													>
 														<Trash2 size={16} />
 													</IconButton>
@@ -766,28 +782,24 @@ const CreateMonitorPage = () => {
 			/>
 
 			<ConfigBox
-					title={t("pages.createMonitor.form.escalationRules.title")}
-					subtitle={t("pages.createMonitor.form.escalationRules.description")}
-					rightContent={
-						<Stack spacing={theme.spacing(LAYOUT.MD)}>
-							<Controller
-								name="escalationEmailFrequency"
+				title={t("pages.createMonitor.form.escalationRules.title")}
+				subtitle={t("pages.createMonitor.form.escalationRules.description")}
+				rightContent={
+					<Stack spacing={theme.spacing(LAYOUT.MD)}>
+						<Controller
+							name="escalation.delayMinutes"
 							control={control}
 							render={({ field, fieldState }) => (
 								<TextField
 									{...field}
 									type="number"
-									value={field.value === 0 ? "" : field.value}
+									value={field.value ?? ""}
 									onChange={(e) => {
 										const val = e.target.value;
-										field.onChange(val === "" ? 0 : Number(val));
+										field.onChange(val === "" ? undefined : Number(val));
 									}}
-									fieldLabel={t(
-										"pages.createMonitor.form.escalationRules.option.frequency.label"
-									)}
-									placeholder={t(
-										"pages.createMonitor.form.escalationRules.option.frequency.placeholder"
-									)}
+									fieldLabel={t("pages.createMonitor.form.escalationRules.option.frequency.label")}
+									placeholder={t("pages.createMonitor.form.escalationRules.option.frequency.placeholder")}
 									fullWidth
 									error={!!fieldState.error}
 									helperText={fieldState.error?.message ?? ""}
@@ -796,79 +808,64 @@ const CreateMonitorPage = () => {
 							)}
 						/>
 						<Controller
-							name="escalationNotifications"
+							name="escalation.channelId"
 							control={control}
-							render={({ field }) => {
+							render={({ field, fieldState }) => {
 								const notificationOptions = (notifications ?? []).map((n) => ({
 									...n,
 									name: n.notificationName,
 								}));
-								const selectedNotifications = notificationOptions.filter((n) =>
-									(field.value ?? []).includes(n.id)
-								);
+								const selectedNotifications = notificationOptions.filter((notification) => notification.id === field.value);
 								return (
 									<Stack spacing={theme.spacing(LAYOUT.MD)}>
 										<Autocomplete
-											multiple
 											options={notificationOptions}
-											value={selectedNotifications}
+											value={selectedNotifications[0] ?? null}
 											getOptionLabel={(option) => option.name}
-											onChange={(_: unknown, newValue: typeof notificationOptions) => {
-												field.onChange(newValue.map((n) => n.id));
+											onChange={(_: unknown, newValue: (typeof notificationOptions)[number] | null) => {
+												field.onChange(newValue?.id ?? "");
 											}}
 											isOptionEqualToValue={(option, value) => option.id === value.id}
-											fieldLabel={t(
-												"pages.createMonitor.form.escalationRules.option.channels.label"
-											)}
+											fieldLabel={t("pages.createMonitor.form.escalationRules.option.channels.label")}
 											renderInput={(params) => (
 												<TextField
 													{...params}
-													placeholder={t(
-														"pages.createMonitor.form.escalationRules.option.channels.placeholder"
-													)}
+													placeholder={t("pages.createMonitor.form.escalationRules.option.channels.placeholder")}
+													error={!!fieldState.error}
+													helperText={fieldState.error?.message ?? ""}
 												/>
 											)}
-											/>
-											{selectedNotifications.length > 0 && (
-												<Stack flex={1} width="100%">
-													{selectedNotifications.map((notification, index) => (
-														<Stack
-															direction="row"
-															alignItems="center"
-															key={notification.id}
-															width="100%"
+										/>
+										{selectedNotifications.length > 0 && (
+											<Stack flex={1} width="100%">
+												{selectedNotifications.map((notification) => (
+													<Stack
+														direction="row"
+														alignItems="center"
+														key={notification.id}
+														width="100%"
+													>
+														<Typography flexGrow={1}>{notification.notificationName}</Typography>
+														<IconButton
+															size="small"
+															onClick={() => {
+																field.onChange("");
+															}}
+															aria-label={t("pages.createMonitor.form.escalationRules.option.channels.removeAriaLabel")}
 														>
-																<Typography flexGrow={1}>
-																	{notification.notificationName}
-																</Typography>
-																<IconButton
-																	size="small"
-																	onClick={() => {
-																		field.onChange(
-																				(field.value ?? []).filter(
-																					(id: string) => id !== notification.id
-																				)
-																			);
-																}}
-																aria-label="Remove escalation channel"
-																>
-																	<Trash2 size={16} />
-																</IconButton>
-																{index < selectedNotifications.length - 1 && <Divider />}
-															</Stack>
-													))}
-												</Stack>
-												
-											)}
-										</Stack>
-									);
-									
-								}}
-							/>
+															<Trash2 size={16} />
+														</IconButton>
+													</Stack>
+												))}
+											</Stack>
+										)}
+									</Stack>
+								);
+							}}
+						/>
 					</Stack>
-					}
-				/>
-			
+				}
+			/>
 
 			{(watchedType === "http" ||
 				watchedType === "grpc" ||

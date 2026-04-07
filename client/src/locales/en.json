@@ -541,19 +541,23 @@
 				},
 				"notifications": {
 					"description": "Select the notification channels you want to use",
-					"title": "Notifications"
+					"title": "Notifications",
+					"option": {
+						"removeAriaLabel": "Remove notification"
+					}
 				},
 				"escalationRules": {
                     "title": "Escalation Rules",
-                    "description": "If the monitor stays down for the specified time, notify additional channels.",
+                    "description": "If an incident remains unresolved after the selected delay, notify the escalation channel.",
                     "option": {
                         "frequency": {
                             "label": "Escalate After (minutes)",
                             "placeholder": "Enter minutes"
                         },
                         "channels": {
-                            "label": "Escalation notification channels",
-                            "placeholder": "Select channels"
+                            "label": "Escalation channel",
+							"placeholder": "Select a channel",
+							"removeAriaLabel": "Remove escalation channel"
                         }
                     }
                 },

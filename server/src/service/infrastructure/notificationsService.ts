@@ -179,20 +179,23 @@ export class NotificationsService implements INotificationsService {
 			return false;
 		}
 
-		// Check if escalation notifications are configured
-		const escalationNotificationIds = currentMonitor.escalationNotifications ?? [];
-		if (escalationNotificationIds.length === 0) {
+		const escalationDelayMinutes = currentMonitor.escalation?.delayMinutes ?? currentMonitor.escalationEmailFrequency;
+		const legacyEscalationNotificationIds = currentMonitor.escalationNotifications ?? [];
+		const escalationChannelId =
+			currentMonitor.escalation?.channelId ??
+			currentMonitor.escalationNotificationChannel ??
+			legacyEscalationNotificationIds[0];
+
+		if (!escalationDelayMinutes || escalationDelayMinutes <= 0 || !escalationChannelId) {
 			return false;
 		}
 
-		// Check if escalation frequency is set
-		const escalationFrequency = currentMonitor.escalationEmailFrequency;
-		if (!escalationFrequency || escalationFrequency <= 0) {
-			return false;
-		}
-
+		const escalationNotificationIds =
+			currentMonitor.escalation?.channelId || currentMonitor.escalationNotificationChannel
+				? [escalationChannelId]
+				: legacyEscalationNotificationIds;
 		const now = new Date();
-		const escalationIntervalMs = escalationFrequency * 60 * 1000; // Convert minutes to milliseconds
+		const escalationIntervalMs = escalationDelayMinutes * 60 * 1000;
 		const lastEscalationSentAt = currentMonitor.lastEscalationEmailSentAt ? new Date(currentMonitor.lastEscalationEmailSentAt) : null;
 
 		if (!lastEscalationSentAt) {

@@ -169,16 +169,23 @@ export class SuperSimpleQueueHelper implements ISuperSimpleQueueHelper {
 					});
 				}
 
-				// Step 6b. Only consider escalation reminders on steady-state down/breached checks.
+				// Step 6b. Only consider escalations for unresolved incidents on steady-state down/breached checks.
 				if (!decision.shouldSendNotification && (statusChangeResult.monitor.status === "down" || statusChangeResult.monitor.status === "breached")) {
-					this.notificationsService.handleEscalationNotifications(statusChangeResult.monitor, status).catch((error: unknown) => {
-						this.logger.error({
-							message: `Error sending escalation notifications for job ${statusChangeResult.monitor.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
-							service: SERVICE_NAME,
-							method: "getMonitorJob",
-							stack: error instanceof Error ? error.stack : undefined,
+					const activeIncident = await this.incidentsRepository.findActiveByMonitorId(
+						statusChangeResult.monitor.id,
+						statusChangeResult.monitor.teamId
+					);
+
+					if (activeIncident?.status) {
+						this.notificationsService.handleEscalationNotifications(statusChangeResult.monitor, status).catch((error: unknown) => {
+							this.logger.error({
+								message: `Error sending escalation notifications for job ${statusChangeResult.monitor.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
+								service: SERVICE_NAME,
+								method: "getMonitorJob",
+								stack: error instanceof Error ? error.stack : undefined,
+							});
 						});
-					});
+					}
 				}
 
 			// Step 7. Handle incidents (best effort, don't wait)
