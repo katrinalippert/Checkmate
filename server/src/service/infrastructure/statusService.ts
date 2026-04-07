@@ -354,14 +354,14 @@ export class StatusService implements IStatusService {
 				}
 			}
 
-				if (statusChanged && (newStatus === "down" || newStatus === "breached" || newStatus === "up")) {
-					monitor.lastEscalationEmailSentAt = undefined;
-				}
+			if (statusChanged && (newStatus === "down" || newStatus === "breached" || newStatus === "up")) {
+				monitor.lastEscalationEmailSentAt = undefined;
+			}
 
-				// Apply the final status
-				monitor.status = newStatus;
+			// Apply the final status
+			monitor.status = newStatus;
 
-				const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
+			const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
 
 			return {
 				monitor: updated,

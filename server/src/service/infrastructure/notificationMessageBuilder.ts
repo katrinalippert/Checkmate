@@ -111,11 +111,7 @@ export class NotificationMessageBuilder implements INotificationMessageBuilder {
 			case "monitor_up":
 				return this.buildMonitorUpContent(monitor);
 			case "threshold_breach":
-				return this.buildThresholdBreachContent(
-					monitor,
-					monitorStatusResponse as MonitorStatusResponse<HardwareStatusPayload>,
-					isEscalation
-				);
+				return this.buildThresholdBreachContent(monitor, monitorStatusResponse as MonitorStatusResponse<HardwareStatusPayload>, isEscalation);
 			case "threshold_resolved":
 				return this.buildThresholdResolvedContent(monitor);
 			default:
@@ -123,11 +119,7 @@ export class NotificationMessageBuilder implements INotificationMessageBuilder {
 		}
 	}
 
-	private buildMonitorDownContent(
-		monitor: Monitor,
-		monitorStatusResponse: MonitorStatusResponse,
-		isEscalation = false
-	): NotificationContent {
+	private buildMonitorDownContent(monitor: Monitor, monitorStatusResponse: MonitorStatusResponse, isEscalation = false): NotificationContent {
 		const title = isEscalation ? `Escalation: Monitor ${monitor.name} still down` : `Monitor Down: ${monitor.name}`;
 		const summary = isEscalation
 			? `Monitor ${monitor.name} is still experiencing issues. Monitor "${monitor.name}" is currently down and unreachable.`

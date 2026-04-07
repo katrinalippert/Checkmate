@@ -141,11 +141,7 @@ export class NotificationsService implements INotificationsService {
 		const result = await this.sendNotifications(monitor, monitorStatusResponse, decision);
 
 		// Initial down/breached alerts should start the escalation interval clock.
-		if (
-			result.succeeded > 0 &&
-			!decision.isEscalation &&
-			(monitor.status === "down" || monitor.status === "breached")
-		) {
+		if (result.succeeded > 0 && !decision.isEscalation && (monitor.status === "down" || monitor.status === "breached")) {
 			try {
 				await this.monitorsRepository.updateById(monitor.id, monitor.teamId, {
 					lastEscalationEmailSentAt: new Date(),
@@ -182,18 +178,14 @@ export class NotificationsService implements INotificationsService {
 		const escalationDelayMinutes = currentMonitor.escalation?.delayMinutes ?? currentMonitor.escalationEmailFrequency;
 		const legacyEscalationNotificationIds = currentMonitor.escalationNotifications ?? [];
 		const escalationChannelId =
-			currentMonitor.escalation?.channelId ??
-			currentMonitor.escalationNotificationChannel ??
-			legacyEscalationNotificationIds[0];
+			currentMonitor.escalation?.channelId ?? currentMonitor.escalationNotificationChannel ?? legacyEscalationNotificationIds[0];
 
 		if (!escalationDelayMinutes || escalationDelayMinutes <= 0 || !escalationChannelId) {
 			return false;
 		}
 
 		const escalationNotificationIds =
-			currentMonitor.escalation?.channelId || currentMonitor.escalationNotificationChannel
-				? [escalationChannelId]
-				: legacyEscalationNotificationIds;
+			currentMonitor.escalation?.channelId || currentMonitor.escalationNotificationChannel ? [escalationChannelId] : legacyEscalationNotificationIds;
 		const now = new Date();
 		const escalationIntervalMs = escalationDelayMinutes * 60 * 1000;
 		const lastEscalationSentAt = currentMonitor.lastEscalationEmailSentAt ? new Date(currentMonitor.lastEscalationEmailSentAt) : null;
@@ -238,15 +230,12 @@ export class NotificationsService implements INotificationsService {
 		// Build notification message for escalation
 		const settings = this.settingsService.getSettings();
 		const clientHost = settings.clientHost || "Host not defined";
-		const notificationMessage = this.notificationMessageBuilder.buildMessage(
-			currentMonitor,
-			monitorStatusResponse,
-			escalationDecision,
-			clientHost
-		);
+		const notificationMessage = this.notificationMessageBuilder.buildMessage(currentMonitor, monitorStatusResponse, escalationDecision, clientHost);
 
 		// Send escalation notifications
-		const tasks = notifications.map((notification) => this.send(notification, currentMonitor, monitorStatusResponse, escalationDecision, notificationMessage));
+		const tasks = notifications.map((notification) =>
+			this.send(notification, currentMonitor, monitorStatusResponse, escalationDecision, notificationMessage)
+		);
 
 		const outcomes = await Promise.all(tasks);
 		const succeeded = outcomes.filter(Boolean).length;

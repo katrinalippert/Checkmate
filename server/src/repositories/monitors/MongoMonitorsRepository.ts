@@ -367,9 +367,9 @@ class MongoMonitorsRepository implements IMonitorsRepository {
 		const escalation =
 			escalationDelayMinutes && escalationChannelId
 				? {
-					delayMinutes: escalationDelayMinutes,
-					channelId: escalationChannelId,
-				}
+						delayMinutes: escalationDelayMinutes,
+						channelId: escalationChannelId,
+					}
 				: undefined;
 
 		return {
@@ -440,9 +440,9 @@ class MongoMonitorsRepository implements IMonitorsRepository {
 		const escalation =
 			escalationDelayMinutes && escalationChannelId
 				? {
-					delayMinutes: escalationDelayMinutes,
-					channelId: escalationChannelId,
-				}
+						delayMinutes: escalationDelayMinutes,
+						channelId: escalationChannelId,
+					}
 				: undefined;
 
 		return {

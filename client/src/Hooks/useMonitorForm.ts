@@ -8,7 +8,8 @@ interface UseMonitorFormOptions {
 }
 
 const getBaseDefaults = (data?: Monitor | null) => {
-	const escalationDelayMinutes = data?.escalation?.delayMinutes ?? data?.escalationEmailFrequency;
+	const escalationDelayMinutes =
+		data?.escalation?.delayMinutes ?? data?.escalationEmailFrequency;
 	const escalationChannelId =
 		data?.escalation?.channelId ??
 		data?.escalationNotificationChannel ??
@@ -23,9 +24,9 @@ const getBaseDefaults = (data?: Monitor | null) => {
 		escalation:
 			escalationDelayMinutes && escalationChannelId
 				? {
-					delayMinutes: escalationDelayMinutes,
-					channelId: escalationChannelId,
-				}
+						delayMinutes: escalationDelayMinutes,
+						channelId: escalationChannelId,
+					}
 				: undefined,
 		escalationNotifications: data?.escalationNotifications || [],
 		escalationEmailFrequency: data?.escalationEmailFrequency ?? undefined,

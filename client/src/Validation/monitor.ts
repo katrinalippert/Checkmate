@@ -6,12 +6,18 @@ const urlSchema = z.url({ message: "Please enter a valid URL" });
 
 const escalationSchema = z
 	.object({
-		delayMinutes: z.number().min(1, "Escalation delay must be at least 1 minute").optional(),
+		delayMinutes: z
+			.number()
+			.min(1, "Escalation delay must be at least 1 minute")
+			.optional(),
 		channelId: z.string().optional(),
 	})
 	.optional()
 	.refine(
-		(value) => !value || (!value.delayMinutes && !value.channelId) || (Boolean(value.delayMinutes) && Boolean(value.channelId)),
+		(value) =>
+			!value ||
+			(!value.delayMinutes && !value.channelId) ||
+			(Boolean(value.delayMinutes) && Boolean(value.channelId)),
 		{
 			message: "Select both the escalation delay and channel",
 			path: ["channelId"],
@@ -29,7 +35,10 @@ const baseSchema = z.object({
 	notifications: z.array(z.string()),
 	escalation: escalationSchema,
 	escalationNotifications: z.array(z.string()).optional(),
-	escalationEmailFrequency: z.number().min(1, "Escalation frequency must be at least 1 minute").optional(),
+	escalationEmailFrequency: z
+		.number()
+		.min(1, "Escalation frequency must be at least 1 minute")
+		.optional(),
 	escalationNotificationChannel: z.string().optional(),
 	statusWindowSize: z
 		.number({ message: "Status window size is required" })

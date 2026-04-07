@@ -21,10 +21,10 @@ export class HttpProvider implements IStatusProvider<HttpStatusPayload> {
 	) {
 		const cacheable = new CacheableLookup({ maxTtl: 300, errorTtl: 30 });
 		this.got = got.extend({
-		    timeout: {
-		        request: 30000,
-		    },
-		    retry: { limit: 1 },
+			timeout: {
+				request: 30000,
+			},
+			retry: { limit: 1 },
 		});
 	}
 
