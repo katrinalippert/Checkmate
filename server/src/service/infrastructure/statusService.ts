@@ -259,8 +259,9 @@ export class StatusService implements IStatusService {
 				newStatus = "down";
 				statusChanged = true;
 			}
-			// Recover only after the failure rate drops back below the configured threshold.
-			else if (failureRate < monitor.statusWindowThreshold && monitor.status === "down") {
+			// Once the sliding window is full and the failure rate is below threshold,
+			// a new or recovered monitor should be considered up.
+			else if (failureRate < monitor.statusWindowThreshold && (monitor.status === "down" || monitor.status === "initializing")) {
 				newStatus = "up";
 				statusChanged = true;
 			}
